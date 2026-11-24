@@ -1,476 +1,257 @@
 <!DOCTYPE html>
-
 <html lang="cs">
-
 <head>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-
 <link rel="manifest" href="manifest.webmanifest">
-
-<meta name="theme-color" content="#2a1f26">
-
+<meta name="theme-color" content="#333136">
 <meta name="apple-mobile-web-app-capable" content="yes">
-
 <meta name="mobile-web-app-capable" content="yes">
-
 <meta name="apple-mobile-web-app-title" content="Nákupy">
-
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-
 <title>Nákupy – Zdéňa & Brambík</title>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-
   :root {
-
-    \--bg: #2a1f26;
-
-    \--card: #37292f;
-
-    \--card-alt: #42323a;
-
-    \--text: #f4e8ec;
-
-    \--muted: #b39aa4;
-
-    \--line: #54424b;
-
-    \--accent: #b45f7b;
-
-    \--link: #f0a7bf;
-
-    \--ok-bg: #173a28;
-
-    \--ok-text: #8ae8ad;
-
-    \--ok-glow: #2ecc71;
-
-    \--bad-bg: #5a1a24;
-
-    \--bad-text: #ffb0b0;
-
-    \--bad-glow: #ff5a5a;
-
-    \--today: #4d3b36;
-
-    \--sunday: #3d2d35;
-
-    \--side-bg: #5a3347;
-
-    \--side-text: #ffd3e1;
-
-    \--side-line: #d98aa8;
-
+    --bg: #333136;
+    --card: #3f3c42;
+    --card-alt: #4a474e;
+    --text: #f5eff2;
+    --muted: #bdb4bb;
+    --line: #5d5961;
+    --accent: #e6007e;
+    --accent-text: #ffffff;
+    --link: #ff7cbd;
+    --ok-bg: #1f4a35;
+    --ok-text: #9af0bb;
+    --ok-glow: #4fd88a;
+    --bad-bg: #6a2430;
+    --bad-text: #ffc0c0;
+    --bad-glow: #ff7a7a;
+    --today-bg: rgba(230, 0, 126, .25);
+    --today-edge: #ffd27a;
+    --sum-bg: #47444b;
   }
-
   html { color-scheme: dark; }
-
-  \* { box-sizing: border-box; }
-
+  * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
-
   body {
-
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-
     background: var(--bg);
-
     color: var(--text);
-
     padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
-
     -webkit-text-size-adjust: 100%;
-
   }
-
   .wrap { max-width: 560px; margin: 0 auto; padding: 12px; }
 
-
-
   .nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
-
   .nav button {
-
-    border: 0; background: var(--accent); color: #fff;
-
-    width: 48px; height: 44px; border-radius: 12px; font-size: 22px; cursor: pointer;
-
+    border: 0; background: var(--accent); color: var(--accent-text);
+    width: 48px; height: 44px; border-radius: 12px; font-size: 22px; font-weight: 700; cursor: pointer;
   }
-
   .nav button:disabled { opacity: .3; }
-
   .nav .mid { text-align: center; flex: 1; }
-
   .nav .mid .range { font-weight: 700; font-size: 1.05rem; }
-
   .nav .mid a { font-size: .85rem; color: var(--link); text-decoration: underline; cursor: pointer; }
 
-
-
   h2.sec { margin: 18px 4px 8px; font-size: 1.1rem; }
-
   h2.sec small { display: block; font-weight: 400; font-size: .78rem; color: var(--muted); margin-top: 2px; }
-
   h2.first { margin-top: 4px; }
 
-
-
   table {
-
     width: 100%; border-collapse: separate; border-spacing: 0;
-
     background: var(--card); border-radius: 14px; overflow: hidden;
-
-    box-shadow: 0 1px 6px rgba(0,0,0,.35); table-layout: fixed;
-
+    box-shadow: 0 1px 6px rgba(0,0,0,.25); table-layout: fixed;
   }
-
-  th { background: var(--accent); color: #fff; font-weight: 600; padding: 12px 4px; font-size: 1rem; }
-
+  th { background: var(--accent); color: var(--accent-text); font-weight: 700; padding: 12px 4px; font-size: 1rem; }
   th.date-col { width: 27%; text-align: left; padding-left: 10px; }
-
   th.total-col { width: 22%; }
-
   td { border-top: 1px solid var(--line); padding: 6px 4px; text-align: center; }
-
   td.date { text-align: left; padding-left: 10px; line-height: 1.2; }
-
   td.date .dn { font-weight: 700; }
-
   td.date .dd { font-size: .8rem; color: var(--muted); }
 
-  tr.today td.date { background: var(--today); }
-
-  tr.today td.date .dn::after { content: " •"; color: #e8b04a; }
-
-
-
-  .cell-btn {
-
-    width: 100%; min-height: 48px; font-size: 1rem; font-weight: 600;
-
-    padding: 6px 2px; text-align: center; cursor: pointer;
-
-    border: 2px solid var(--line); border-radius: 10px;
-
-    background: var(--card-alt); color: var(--muted);
-
-    transition: background .2s, border-color .2s, box-shadow .2s;
-
+  /* dnešní den – výrazné zvýraznění celého řádku */
+  tr.today td { background: var(--today-bg); border-top-color: var(--today-edge); border-bottom: 1px solid var(--today-edge); }
+  tr.today td.date { box-shadow: inset 5px 0 0 var(--today-edge); }
+  tr.today td.date .dn { color: #fff; font-size: 1.05rem; }
+  tr.today td.date .dd { color: var(--text); }
+  tr.today td.date .dn::after {
+    content: "DNES"; margin-left: 6px; padding: 2px 6px; border-radius: 6px;
+    background: var(--today-edge); color: #3a2a10; font-size: .62rem; font-weight: 800;
+    letter-spacing: .04em; vertical-align: middle;
   }
 
+  .cell-btn {
+    width: 100%; min-height: 48px; font-size: 1rem; font-weight: 600;
+    padding: 6px 2px; text-align: center; cursor: pointer;
+    border: 2px solid var(--line); border-radius: 10px;
+    background: var(--card-alt); color: var(--muted);
+    transition: background .2s, border-color .2s, box-shadow .2s;
+  }
   .cell-btn small { display: block; font-weight: 400; font-size: .7rem; }
-
   .cell-btn.empty { font-size: 1.4rem; font-weight: 400; }
 
-
-
-  .ok  { background: var(--ok-bg)  !important; color: var(--ok-text);  border-color: var(--ok-glow) !important;  box-shadow: 0 0 8px rgba(46,204,113,.5); }
-
-  .bad { background: var(--bad-bg) !important; color: var(--bad-text); border-color: var(--bad-glow) !important; box-shadow: 0 0 8px rgba(255,90,90,.5); }
-
-  .side-on { background: var(--side-bg) !important; color: var(--side-text); border-color: var(--side-line) !important; }
-
-
+  .ok  { background: var(--ok-bg)  !important; color: var(--ok-text);  border-color: var(--ok-glow) !important;  box-shadow: 0 0 8px rgba(79,216,138,.45); }
+  .bad { background: var(--bad-bg) !important; color: var(--bad-text); border-color: var(--bad-glow) !important; box-shadow: 0 0 8px rgba(255,122,122,.45); }
 
   .total { font-weight: 700; border-radius: 10px; padding: 10px 2px; border: 2px solid transparent; font-size: .95rem; }
 
-  .total.side-on { border-color: var(--side-line); }
-
-
-
-  tr.sum td { background: var(--sunday); border-top: 2px solid var(--accent); }
-
+  tr.sum td { background: var(--sum-bg); border-top: 2px solid var(--accent); }
   tr.sum td.date .dn { color: var(--link); }
-
   tr.sum .cell { font-weight: 700; padding: 10px 2px; border-radius: 10px; border: 2px solid transparent; font-size: .95rem; }
-
   tr.sum .cell small { display: block; font-weight: 400; font-size: .7rem; color: var(--muted); }
 
-
-
-  .hint { text-align: center; color: var(--muted); font-size: .8rem; margin: 10px 0 0; }
-
   .actions { display: flex; justify-content: center; gap: 10px; margin-top: 18px; }
-
   .actions button {
-
     background: none; border: 1px solid var(--line); color: var(--muted);
-
     padding: 8px 12px; border-radius: 10px; font-size: .8rem; cursor: pointer;
-
   }
-
-
 
   /* ===== okno s nákupy ===== */
-
-  \#overlay {
-
-    position: fixed; inset: 0; background: rgba(0,0,0,.65);
-
+  #overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.55);
     display: none; align-items: flex-end; justify-content: center; z-index: 10;
-
   }
-
-  \#overlay.open { display: flex; }
-
-  \#sheet {
-
+  #overlay.open { display: flex; }
+  #sheet {
     background: var(--card); width: 100%; max-width: 560px;
-
     border-radius: 18px 18px 0 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
-
     max-height: 85vh; overflow-y: auto;
-
   }
-
-  \#sheet h2 { margin: 0 0 2px; font-size: 1.15rem; }
-
-  \#sheet .sub { color: var(--muted); font-size: .85rem; margin-bottom: 12px; }
-
-  \#itemList { list-style: none; margin: 0 0 12px; padding: 0; }
-
-  \#itemList li {
-
+  #sheet h2 { margin: 0 0 2px; font-size: 1.15rem; }
+  #sheet .sub { color: var(--muted); font-size: .85rem; margin-bottom: 12px; }
+  #itemList { list-style: none; margin: 0 0 12px; padding: 0; }
+  #itemList li {
     display: flex; align-items: center; justify-content: space-between;
-
     padding: 10px 4px; border-bottom: 1px solid var(--line); font-size: 1.05rem;
-
   }
-
-  \#itemList li button {
-
+  #itemList li button {
     border: 0; background: var(--bad-bg); color: var(--bad-text);
-
     width: 36px; height: 36px; border-radius: 10px; font-size: 1.1rem; cursor: pointer;
-
   }
+  #itemList .none { color: var(--muted); justify-content: center; font-size: .9rem; }
 
-  \#itemList .none { color: var(--muted); justify-content: center; font-size: .9rem; }
-
-  .add-row { display: flex; gap: 8px; }
-
+  .add-row { display: none; gap: 8px; }
+  .add-row.show { display: flex; }
   .add-row input {
-
     flex: 1; min-width: 0; font-size: 18px; padding: 12px; text-align: center;
-
     border: 2px solid var(--line); border-radius: 12px;
-
     background: var(--card-alt); color: var(--text);
-
   }
-
   .add-row input:focus { outline: none; border-color: var(--accent); }
+  .add-row button {
+    border: 0; background: var(--accent); color: var(--accent-text);
+    border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer;
+    padding: 0 18px; white-space: nowrap;
+  }
+  .add-row #note { flex: 1.4; }
 
-  .add-row button, #done {
-
-    border: 0; background: var(--accent); color: #fff;
-
-    border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer;
-
+  #showAdd {
+    width: 100%; padding: 12px; margin-bottom: 12px;
+    border: 2px dashed var(--accent); border-radius: 12px;
+    background: none; color: var(--link);
+    font-size: 1.05rem; font-weight: 600; cursor: pointer;
   }
 
-  .add-row button { padding: 0 18px; white-space: nowrap; }
-
-.add-row #note { flex: 1.4; }
-
-  \#sheetTotal { font-weight: 700; text-align: right; margin: 12px 4px; font-size: 1.05rem; }
-
-  \#done { width: 100%; padding: 14px; background: var(--card-alt); color: var(--text); }
-
+  #sheetTotal { font-weight: 700; text-align: right; margin: 12px 4px; font-size: 1.05rem; }
+  #done {
+    width: 100%; padding: 14px; border: 0; border-radius: 12px;
+    font-size: 1rem; font-weight: 600; cursor: pointer;
+    background: var(--card-alt); color: var(--text);
+  }
 </style>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
-
 <div class="wrap">
-
   <div class="nav">
-
     <button id="prev" aria-label="Předchozí týden">‹</button>
-
     <div class="mid">
-
       <div class="range" id="range"></div>
-
       <a id="today">Dnes</a>
-
     </div>
-
     <button id="next" aria-label="Další týden">›</button>
-
   </div>
-
-
 
   <h2 class="sec first">Jídlo<small id="hint"></small></h2>
-
   <table>
-
     <thead>
-
       <tr>
-
         <th class="date-col">Den</th>
-
         <th>Zdéňa</th>
-
         <th>Brambík</th>
-
         <th class="total-col">Celkem</th>
-
       </tr>
-
     </thead>
-
     <tbody id="body-main"></tbody>
-
   </table>
-
-
-
-  <h2 class="sec">Vedlejší<small>Nákupy mimo jídlo, do limitu se nepočítají</small></h2>
-
-  <table>
-
-    <thead>
-
-      <tr>
-
-        <th class="date-col">Den</th>
-
-        <th>Zdéňa</th>
-
-        <th>Brambík</th>
-
-        <th class="total-col">Celkem</th>
-
-      </tr>
-
-    </thead>
-
-    <tbody id="body-side"></tbody>
-
-  </table>
-
-
 
   <div class="actions">
-
     <button id="export">Zálohovat data</button>
-
     <button id="import">Obnovit ze zálohy</button>
-
   </div>
-
   <input type="file" id="file" accept=".json" hidden>
-
 </div>
-
-
 
 <!-- okno pro přidávání nákupů -->
-
 <div id="overlay">
-
   <div id="sheet">
-
     <h2 id="sheetTitle"></h2>
-
     <div class="sub" id="sheetSub"></div>
-
     <ul id="itemList"></ul>
 
-    <div class="add-row">
+    <button id="showAdd">+ Přidat nákup</button>
 
-  <input id="amount" type="text" inputmode="decimal" placeholder="Částka v Kč" autocomplete="off">
-
-  <input id="note" type="text" placeholder="Poznámka (např. Lidl)" autocomplete="off">
-
-  <button id="add">Přidat</button>
-
-</div>
+    <div class="add-row" id="addRow">
+      <input id="amount" type="text" inputmode="decimal" placeholder="Částka v Kč" autocomplete="off">
+      <input id="note" type="text" placeholder="Poznámka (např. Lidl)" autocomplete="off">
+      <button id="add">Přidat</button>
+    </div>
 
     <div id="sheetTotal"></div>
-
     <button id="done">Hotovo</button>
-
   </div>
-
 </div>
 
-
-
 <script>
-
 /* ===== NASTAVENÍ ===== */
-
-const DAILY_LIMIT = 250;            // limit na jeden den v Kč (jen pro jídlo)
-
+const DAILY_LIMIT = 250;            // limit na jeden den v Kč
 const LIMIT_MODE  = 'day';          // 'day' = limit pro oba dohromady, 'person' = limit pro každého zvlášť
-
 const START = new Date(2026, 0, 1); // první zobrazitelný den
-
 const END   = new Date(2027, 11, 31); // poslední zobrazitelný den (konec příštího roku)
-
 const NAMES = ['Zdéňa', 'Brambík'];
-
-const KEYS  = { main: 'nakupy-data-v2', side: 'nakupy-vedlejsi-v1' };
-
-const OLD_KEY = 'nakupy-data-v1';
-
 /* ===================== */
 
-
-
-const TYPES = ['main', 'side'];
-
-const TYPE_LABEL = { main: 'Jídlo', side: 'Vedlejší' };
-
+const T = 'main';
 const DAYS = ['Neděle','Pondělí','Úterý','Středa','Čtvrtek','Pátek','Sobota'];
-
 const fmtDate = d => `${d.getDate()}. ${d.getMonth()+1}.`;
-
 const key = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-
 const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
-
 const mondayOf = d => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; };
-
 const round2 = n => Math.round(n * 100) / 100;
-
 const money = n => round2(n).toLocaleString('cs-CZ') + ' Kč';
-
 const keyToDate = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
-
-
 
 /* Supabase */
 const SUPABASE_URL = 'https://hpgwiajenllqxpildirm.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_akTJJz0VkNxPvObhXJA0bg_oTTUqZWj';
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
-/* store[typ][datum] = [ [ {id,amount,note} ], [ ... ] ] */
-const store = { main: {}, side: {} };
+/* store[datum] = [ [ {id,amount,note} ], [ ... ] ] */
+let store = {};
 
-const getItems = (t, k, p) => (store[t][k] && store[t][k][p]) || [];
-const sumOf = (t, k, p) => round2(getItems(t, k, p).reduce((a, item) => a + Number(item.amount || 0), 0));
+const getItems = (k, p) => (store[k] && store[k][p]) || [];
+const sumOf = (k, p) => round2(getItems(k, p).reduce((a, item) => a + Number(item.amount || 0), 0));
 
 function rebuildStore(rows) {
-  store.main = {}; store.side = {};
+  store = {};
   for (const r of rows || []) {
-    const t = r.typ === 'side' ? 'side' : 'main';
+    if (r.typ === 'side') continue; // staré "vedlejší" nákupy se už nezobrazují
     const p = r.osoba === 'Brambík' ? 1 : 0;
-    store[t][r.datum] = store[t][r.datum] || [[], []];
-    store[t][r.datum][p].push({ id: r.id, amount: Number(r.castka), note: r.poznamka || '' });
+    store[r.datum] = store[r.datum] || [[], []];
+    store[r.datum][p].push({ id: r.id, amount: Number(r.castka), note: r.poznamka || '' });
   }
 }
 
@@ -490,316 +271,161 @@ function startRealtime() {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'nakupy' }, () => loadFromSupabase())
     .subscribe((status) => console.log('Realtime:', status));
 }
+
 const firstMonday = mondayOf(START);
-
 const lastMonday  = mondayOf(END);
-
 let weekStart = mondayOf(new Date());
-
 if (weekStart < firstMonday) weekStart = firstMonday;
-
 if (weekStart > lastMonday)  weekStart = lastMonday;
 
-
-
 const setStatus = (el, total, limit, hasValue) => {
-
   el.classList.remove('ok', 'bad');
-
   if (!hasValue) return;
-
   el.classList.add(total > limit ? 'bad' : 'ok');
-
 };
 
-
-
-function buildBody(t) {
-
-  const body = document.getElementById('body-' + t);
-
+function buildBody() {
+  const body = document.getElementById('body-' + T);
   body.innerHTML = '';
-
   const todayKey = key(new Date());
 
-
-
   for (let i = 0; i < 7; i++) {
-
     const d = addDays(weekStart, i);
-
     const k = key(d);
-
     const tr = document.createElement('tr');
-
     if (k === todayKey) tr.classList.add('today');
-
     const dis = (d < START || d > END) ? 'disabled' : '';
 
-
-
     tr.innerHTML = `
-
       <td class="date"><div class="dn">${DAYS[d.getDay()]}</div><div class="dd">${fmtDate(d)} ${d.getFullYear()}</div></td>
-
-      <td><button class="cell-btn" data-t="${t}" data-k="${k}" data-p="0" ${dis}></button></td>
-
-      <td><button class="cell-btn" data-t="${t}" data-k="${k}" data-p="1" ${dis}></button></td>
-
-      <td><div class="total" data-total="${t}|${k}">–</div></td>`;
-
+      <td><button class="cell-btn" data-k="${k}" data-p="0" ${dis}></button></td>
+      <td><button class="cell-btn" data-k="${k}" data-p="1" ${dis}></button></td>
+      <td><div class="total" data-total="${k}">–</div></td>`;
     body.appendChild(tr);
-
   }
-
-
 
   const sum = document.createElement('tr');
-
   sum.className = 'sum';
-
   sum.innerHTML = `
-
     <td class="date"><div class="dn">Součet týdne</div><div class="dd">${fmtDate(weekStart)} – ${fmtDate(addDays(weekStart, 6))}</div></td>
-
-    <td><div class="cell" id="${t}-sum0"></div></td>
-
-    <td><div class="cell" id="${t}-sum1"></div></td>
-
-    <td><div class="cell" id="${t}-sumT"></div></td>`;
-
+    <td><div class="cell" id="sum0"></div></td>
+    <td><div class="cell" id="sum1"></div></td>
+    <td><div class="cell" id="sumT"></div></td>`;
   body.appendChild(sum);
-
 }
-
-
 
 function render() {
-
-  TYPES.forEach(buildBody);
-
-
+  buildBody();
 
   const endDay = addDays(weekStart, 6);
-
   document.getElementById('range').textContent =
-
     `${fmtDate(weekStart)} – ${fmtDate(endDay)} ${endDay.getFullYear()}`;
-
   document.getElementById('prev').disabled = weekStart <= firstMonday;
-
   document.getElementById('next').disabled = weekStart >= lastMonday;
-
   document.getElementById('hint').textContent =
-
     LIMIT_MODE === 'day'
-
       ? `Limit: ${DAILY_LIMIT} Kč na den (oba dohromady)`
-
       : `Limit: ${DAILY_LIMIT} Kč na den pro každého`;
 
-
-
   refresh();
-
 }
 
-
-
-function refreshType(t) {
-
-  const isMain = t === 'main';
-
+function refresh() {
   let s0 = 0, s1 = 0, anyValue = false;
-
   const weekLimit = DAILY_LIMIT * 7;
 
-
-
   for (let i = 0; i < 7; i++) {
-
     const k = key(addDays(weekStart, i));
-
-    const a = sumOf(t, k, 0), b = sumOf(t, k, 1);
-
-    const has = getItems(t, k, 0).length > 0 || getItems(t, k, 1).length > 0;
-
+    const a = sumOf(k, 0), b = sumOf(k, 1);
+    const has = getItems(k, 0).length > 0 || getItems(k, 1).length > 0;
     s0 += a; s1 += b;
-
     if (has) anyValue = true;
 
-
-
-    const totalEl = document.querySelector(`[data-total="${t}|${k}"]`);
-
+    const totalEl = document.querySelector(`[data-total="${k}"]`);
     totalEl.textContent = has ? money(a + b) : '–';
 
-
-
-    document.querySelectorAll(`.cell-btn[data-t="${t}"][data-k="${k}"]`).forEach(btn => {
-
+    document.querySelectorAll(`.cell-btn[data-k="${k}"]`).forEach(btn => {
       const p = Number(btn.dataset.p);
-
-      const list = getItems(t, k, p);
-
+      const list = getItems(k, p);
       const v = p === 0 ? a : b;
-
       if (list.length) {
-
         btn.classList.remove('empty');
-
         btn.innerHTML = `${round2(v).toLocaleString('cs-CZ')}${list.length > 1 ? `<small>${list.length} nákupy</small>` : ''}`;
-
       } else {
-
         btn.classList.add('empty');
-
         btn.textContent = '+';
-
       }
-
-      if (isMain) {
-
-        if (LIMIT_MODE === 'day') setStatus(btn, a + b, DAILY_LIMIT, has);
-
-        else setStatus(btn, v, DAILY_LIMIT, list.length > 0);
-
-      } else {
-
-        btn.classList.toggle('side-on', list.length > 0);
-
-      }
-
+      if (LIMIT_MODE === 'day') setStatus(btn, a + b, DAILY_LIMIT, has);
+      else setStatus(btn, v, DAILY_LIMIT, list.length > 0);
     });
 
-
-
-    if (isMain) {
-
-      if (LIMIT_MODE === 'day') setStatus(totalEl, a + b, DAILY_LIMIT, has);
-
-      else setStatus(totalEl, Math.max(a, b), DAILY_LIMIT, has);
-
-    } else {
-
-      totalEl.classList.toggle('side-on', has);
-
-    }
-
+    if (LIMIT_MODE === 'day') setStatus(totalEl, a + b, DAILY_LIMIT, has);
+    else setStatus(totalEl, Math.max(a, b), DAILY_LIMIT, has);
   }
 
-
-
-  const el0 = document.getElementById(t + '-sum0');
-
-  const el1 = document.getElementById(t + '-sum1');
-
-  const elT = document.getElementById(t + '-sumT');
-
+  const el0 = document.getElementById('sum0');
+  const el1 = document.getElementById('sum1');
+  const elT = document.getElementById('sumT');
   el0.textContent = money(s0);
-
   el1.textContent = money(s1);
-
   elT.textContent = money(s0 + s1);
+  [el0, el1, elT].forEach(e => e.classList.remove('ok', 'bad'));
 
-  [el0, el1, elT].forEach(e => e.classList.remove('ok', 'bad', 'side-on'));
-
-
-
-  if (isMain) {
-
-    if (LIMIT_MODE === 'day') {
-
-      setStatus(elT, s0 + s1, weekLimit, anyValue);
-
-    } else {
-
-      setStatus(el0, s0, weekLimit, anyValue);
-
-      setStatus(el1, s1, weekLimit, anyValue);
-
-      setStatus(elT, Math.max(s0, s1), weekLimit, anyValue);
-
-    }
-
-    elT.insertAdjacentHTML('beforeend', `<small>z ${weekLimit} Kč</small>`);
-
-  } else if (anyValue) {
-
-    elT.classList.add('side-on');
-
+  if (LIMIT_MODE === 'day') {
+    setStatus(elT, s0 + s1, weekLimit, anyValue);
+  } else {
+    setStatus(el0, s0, weekLimit, anyValue);
+    setStatus(el1, s1, weekLimit, anyValue);
+    setStatus(elT, Math.max(s0, s1), weekLimit, anyValue);
   }
-
+  elT.insertAdjacentHTML('beforeend', `<small>z ${weekLimit} Kč</small>`);
 }
-
-
-
-function refresh() { TYPES.forEach(refreshType); }
-
-
 
 /* ===== okno s nákupy ===== */
-
-let cur = null; // { t, k, p }
-
+let cur = null; // { k, p }
 const overlay = document.getElementById('overlay');
-
 const amountEl = document.getElementById('amount');
 const noteEl = document.getElementById('note');
+const addRowEl = document.getElementById('addRow');
+const showAddBtn = document.getElementById('showAdd');
 
-
-
-function openSheet(t, k, p) {
-
-  cur = { t, k, p };
-
-  const d = keyToDate(k);
-
-  document.getElementById('sheetTitle').textContent = `${NAMES[p]} – ${TYPE_LABEL[t]}`;
-
-  document.getElementById('sheetSub').textContent = `${DAYS[d.getDay()]} ${fmtDate(d)} ${d.getFullYear()}`;
-
-  overlay.classList.add('open');
-
-  renderSheet();
-
-  amountEl.value = '';
-
-  setTimeout(() => amountEl.focus(), 50);
-
+function showAddRow(show) {
+  addRowEl.classList.toggle('show', show);
+  showAddBtn.style.display = show ? 'none' : 'block';
+  if (show) setTimeout(() => amountEl.focus(), 50);
 }
 
+showAddBtn.onclick = () => showAddRow(true);
 
+function openSheet(k, p) {
+  cur = { k, p };
+  const d = keyToDate(k);
+  document.getElementById('sheetTitle').textContent = `${NAMES[p]} – Jídlo`;
+  document.getElementById('sheetSub').textContent = `${DAYS[d.getDay()]} ${fmtDate(d)} ${d.getFullYear()}`;
+  overlay.classList.add('open');
+  renderSheet();
+  amountEl.value = '';
+  noteEl.value = '';
+  showAddRow(false);
+}
 
 function closeSheet() {
-
   overlay.classList.remove('open');
-
   cur = null;
-
 }
 
-
-
-function escapeHtml(str) { return String(str).replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c])); }
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
 
 function renderSheet() {
-
-  const list = getItems(cur.t, cur.k, cur.p);
-
+  const list = getItems(cur.k, cur.p);
   const ul = document.getElementById('itemList');
-
   ul.innerHTML = list.length
-
     ? list.map((item, i) => `<li><span>${round2(item.amount).toLocaleString('cs-CZ')} Kč${item.note ? ` <small style="display:block;color:var(--muted);font-size:.8rem">${escapeHtml(item.note)}</small>` : ''}</span><button data-i="${i}" aria-label="Smazat">✕</button></li>`).join('')
-
     : `<li class="none">Zatím žádný nákup</li>`;
-
-  document.getElementById('sheetTotal').textContent = `Dohromady: ${money(sumOf(cur.t, cur.k, cur.p))}`;
-
+  document.getElementById('sheetTotal').textContent = `Dohromady: ${money(sumOf(cur.k, cur.p))}`;
 }
-
-
 
 async function addItem() {
   if (!cur) return;
@@ -807,11 +433,10 @@ async function addItem() {
   const note = noteEl.value.trim();
   if (!(v > 0)) { amountEl.focus(); return; }
 
-  const osoba = NAMES[cur.p];
   const { error } = await db.from('nakupy').insert({
     datum: cur.k,
-    osoba,
-    typ: cur.t,
+    osoba: NAMES[cur.p],
+    typ: T,
     castka: round2(v),
     poznamka: note
   });
@@ -824,64 +449,43 @@ async function addItem() {
   noteEl.value = '';
   await loadFromSupabase();
   renderSheet();
-  amountEl.focus();
+  showAddRow(false);
 }
 
 document.querySelector('.wrap').addEventListener('click', e => {
-
   const btn = e.target.closest('.cell-btn');
-
-  if (btn) openSheet(btn.dataset.t, btn.dataset.k, Number(btn.dataset.p));
-
+  if (btn) openSheet(btn.dataset.k, Number(btn.dataset.p));
 });
 
 document.getElementById('add').onclick = addItem;
-
 amountEl.addEventListener('keydown', e => { if (e.key === 'Enter') addItem(); });
+noteEl.addEventListener('keydown', e => { if (e.key === 'Enter') addItem(); });
 
 document.getElementById('itemList').addEventListener('click', async e => {
-
   const b = e.target.closest('button[data-i]');
-
   if (!b || !cur) return;
-
-  const item = getItems(cur.t, cur.k, cur.p)[Number(b.dataset.i)];
+  const item = getItems(cur.k, cur.p)[Number(b.dataset.i)];
   if (!item) return;
   const { error } = await db.from('nakupy').delete().eq('id', item.id);
   if (error) { alert('Nákup se nepodařilo smazat.'); return; }
   await loadFromSupabase();
   renderSheet();
-
 });
 
 document.getElementById('done').onclick = closeSheet;
-
 overlay.addEventListener('click', e => { if (e.target === overlay) closeSheet(); });
 
-
-
 /* ===== navigace ===== */
-
 document.getElementById('prev').onclick  = () => { weekStart = addDays(weekStart, -7); render(); };
-
 document.getElementById('next').onclick  = () => { weekStart = addDays(weekStart,  7); render(); };
-
 document.getElementById('today').onclick = () => {
-
   weekStart = mondayOf(new Date());
-
   if (weekStart < firstMonday) weekStart = firstMonday;
-
   if (weekStart > lastMonday)  weekStart = lastMonday;
-
   render();
-
 };
 
-
-
-/* ===== záloha / obnova dat (data jsou jen v tomto zařízení) ===== */
-
+/* ===== záloha / obnova dat ===== */
 document.getElementById('export').onclick = async () => {
   const { data, error } = await db.from('nakupy').select('*').order('datum').order('id');
   if (error) { alert('Zálohu se nepodařilo načíst.'); return; }
@@ -914,21 +518,13 @@ document.getElementById('file').onchange = e => {
   r.readAsText(f);
 };
 
-
-
 loadFromSupabase();
 startRealtime();
 
 /* offline režim (aplikace funguje i bez internetu) */
-
 if ('serviceWorker' in navigator) {
-
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
-
 }
-
 </script>
-
 </body>
-
 </html>
