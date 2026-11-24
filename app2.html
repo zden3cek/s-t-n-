@@ -28,49 +28,49 @@
 
   :root {
 
-    --bg: #2a1f26;
+    \--bg: #2a1f26;
 
-    --card: #37292f;
+    \--card: #37292f;
 
-    --card-alt: #42323a;
+    \--card-alt: #42323a;
 
-    --text: #f4e8ec;
+    \--text: #f4e8ec;
 
-    --muted: #b39aa4;
+    \--muted: #b39aa4;
 
-    --line: #54424b;
+    \--line: #54424b;
 
-    --accent: #b45f7b;
+    \--accent: #b45f7b;
 
-    --link: #f0a7bf;
+    \--link: #f0a7bf;
 
-    --ok-bg: #173a28;
+    \--ok-bg: #173a28;
 
-    --ok-text: #8ae8ad;
+    \--ok-text: #8ae8ad;
 
-    --ok-glow: #2ecc71;
+    \--ok-glow: #2ecc71;
 
-    --bad-bg: #5a1a24;
+    \--bad-bg: #5a1a24;
 
-    --bad-text: #ffb0b0;
+    \--bad-text: #ffb0b0;
 
-    --bad-glow: #ff5a5a;
+    \--bad-glow: #ff5a5a;
 
-    --today: #4d3b36;
+    \--today: #4d3b36;
 
-    --sunday: #3d2d35;
+    \--sunday: #3d2d35;
 
-    --side-bg: #5a3347;
+    \--side-bg: #5a3347;
 
-    --side-text: #ffd3e1;
+    \--side-text: #ffd3e1;
 
-    --side-line: #d98aa8;
+    \--side-line: #d98aa8;
 
   }
 
   html { color-scheme: dark; }
 
-  * { box-sizing: border-box; }
+  \* { box-sizing: border-box; }
 
   html, body { margin: 0; padding: 0; }
 
@@ -210,7 +210,7 @@
 
   /* ===== okno s nákupy ===== */
 
-  #overlay {
+  \#overlay {
 
     position: fixed; inset: 0; background: rgba(0,0,0,.65);
 
@@ -218,9 +218,9 @@
 
   }
 
-  #overlay.open { display: flex; }
+  \#overlay.open { display: flex; }
 
-  #sheet {
+  \#sheet {
 
     background: var(--card); width: 100%; max-width: 560px;
 
@@ -230,13 +230,13 @@
 
   }
 
-  #sheet h2 { margin: 0 0 2px; font-size: 1.15rem; }
+  \#sheet h2 { margin: 0 0 2px; font-size: 1.15rem; }
 
-  #sheet .sub { color: var(--muted); font-size: .85rem; margin-bottom: 12px; }
+  \#sheet .sub { color: var(--muted); font-size: .85rem; margin-bottom: 12px; }
 
-  #itemList { list-style: none; margin: 0 0 12px; padding: 0; }
+  \#itemList { list-style: none; margin: 0 0 12px; padding: 0; }
 
-  #itemList li {
+  \#itemList li {
 
     display: flex; align-items: center; justify-content: space-between;
 
@@ -244,7 +244,7 @@
 
   }
 
-  #itemList li button {
+  \#itemList li button {
 
     border: 0; background: var(--bad-bg); color: var(--bad-text);
 
@@ -252,7 +252,7 @@
 
   }
 
-  #itemList .none { color: var(--muted); justify-content: center; font-size: .9rem; }
+  \#itemList .none { color: var(--muted); justify-content: center; font-size: .9rem; }
 
   .add-row { display: flex; gap: 8px; }
 
@@ -268,8 +268,6 @@
 
   .add-row input:focus { outline: none; border-color: var(--accent); }
 
- .add-row #note { text-align: left; flex: 1.2; }
-
   .add-row button, #done {
 
     border: 0; background: var(--accent); color: #fff;
@@ -278,14 +276,17 @@
 
   }
 
-  .add-row button { padding: 0 18px; }
+  .add-row button { padding: 0 18px; white-space: nowrap; }
 
-  #sheetTotal { font-weight: 700; text-align: right; margin: 12px 4px; font-size: 1.05rem; }
+.add-row #note { flex: 1.4; }
 
-  #done { width: 100%; padding: 14px; background: var(--card-alt); color: var(--text); }
+  \#sheetTotal { font-weight: 700; text-align: right; margin: 12px 4px; font-size: 1.05rem; }
+
+  \#done { width: 100%; padding: 14px; background: var(--card-alt); color: var(--text); }
 
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
@@ -391,7 +392,6 @@
     <div class="add-row">
 
       <input id="amount" type="text" inputmode="decimal" placeholder="Částka v Kč" autocomplete="off">
-      <input id="note" type="text" placeholder="Poznámka (např. Lidl)" autocomplete="off">
 
       <button id="add">Přidat</button>
 
@@ -451,58 +451,43 @@ const keyToDate = k => { const [y, m, d] = k.split('-').map(Number); return new 
 
 
 
-/* store[typ][datum] = [ [nákupy Zdeňka], [nákupy Barbory] ] */
+/* Supabase */
+const SUPABASE_URL = 'https://hpgwiajenllqxpildirm.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_akTJJz0VkNxPvObhXJA0bg_oTTUqZWj';
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
+/* store[typ][datum] = [ [ {id,amount,note} ], [ ... ] ] */
 const store = { main: {}, side: {} };
 
-TYPES.forEach(t => {
-
-  try { store[t] = JSON.parse(localStorage.getItem(KEYS[t])) || {}; } catch (e) { store[t] = {}; }
-
-});
-
-// převod z nejstarší verze (jedno číslo na políčko)
-
-try {
-
-  if (!Object.keys(store.main).length) {
-
-    const old = JSON.parse(localStorage.getItem(OLD_KEY)) || {};
-
-    Object.keys(old).forEach(k => {
-
-      store.main[k] = [0, 1].map(p => { const v = Number(old[k][p]); return v > 0 ? [v] : []; });
-
-    });
-
-  }
-
-} catch (e) {}
-
-const save = () => {
-
-  try { TYPES.forEach(t => localStorage.setItem(KEYS[t], JSON.stringify(store[t]))); } catch (e) {}
-
-};
-
-
-
 const getItems = (t, k, p) => (store[t][k] && store[t][k][p]) || [];
+const sumOf = (t, k, p) => round2(getItems(t, k, p).reduce((a, item) => a + Number(item.amount || 0), 0));
 
-const itemAmount = item => {
-  if (typeof item === 'number') return item;
-  return Number(item?.amount) || 0;
-};
+function rebuildStore(rows) {
+  store.main = {}; store.side = {};
+  for (const r of rows || []) {
+    const t = r.typ === 'side' ? 'side' : 'main';
+    const p = r.osoba === 'Brambík' ? 1 : 0;
+    store[t][r.datum] = store[t][r.datum] || [[], []];
+    store[t][r.datum][p].push({ id: r.id, amount: Number(r.castka), note: r.poznamka || '' });
+  }
+}
 
-const itemNote = item => {
-  if (typeof item === 'number') return '';
-  return String(item?.note || '');
-};
+async function loadFromSupabase() {
+  const { data, error } = await db.from('nakupy').select('id,datum,osoba,typ,castka,poznamka').order('datum').order('id');
+  if (error) {
+    console.error('Supabase load error:', error);
+    alert('Nepodařilo se načíst data ze serveru. Zkontroluj internet a Supabase.');
+    return;
+  }
+  rebuildStore(data);
+  render();
+}
 
-const sumOf = (t, k, p) => round2(getItems(t, k, p).reduce((a, b) => a + itemAmount(b), 0));
-
-
-
+function startRealtime() {
+  db.channel('nakupy-realtime')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'nakupy' }, () => loadFromSupabase())
+    .subscribe((status) => console.log('Realtime:', status));
+}
 const firstMonday = mondayOf(START);
 
 const lastMonday  = mondayOf(END);
@@ -794,51 +779,50 @@ function closeSheet() {
 
 
 
+function escapeHtml(str) { return String(str).replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c])); }
+
 function renderSheet() {
 
   const list = getItems(cur.t, cur.k, cur.p);
+
   const ul = document.getElementById('itemList');
+
   ul.innerHTML = list.length
-    ? list.map((item, i) => {
-        const amount = itemAmount(item);
-        const note = itemNote(item);
-        return `<li><div class="item-info"><span>${round2(amount).toLocaleString('cs-CZ')} Kč</span>${note ? `<small>${escapeHtml(note)}</small>` : ''}</div><button data-i="${i}" aria-label="Smazat">✕</button></li>`;
-      }).join('')
+
+    ? list.map((item, i) => `<li><span>${round2(item.amount).toLocaleString('cs-CZ')} Kč${item.note ? ` <small style="display:block;color:var(--muted);font-size:.8rem">${escapeHtml(item.note)}</small>` : ''}</span><button data-i="${i}" aria-label="Smazat">✕</button></li>`).join('')
+
     : `<li class="none">Zatím žádný nákup</li>`;
 
   document.getElementById('sheetTotal').textContent = `Dohromady: ${money(sumOf(cur.t, cur.k, cur.p))}`;
 
 }
 
-function escapeHtml(value) {
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
 
-function addItem() {
 
+async function addItem() {
   if (!cur) return;
-
   const v = parseFloat(amountEl.value.replace(/\s/g, '').replace(',', '.'));
   const note = noteEl.value.trim();
-
   if (!(v > 0)) { amountEl.focus(); return; }
 
-  const day = store[cur.t];
-  day[cur.k] = day[cur.k] || [[], []];
-  day[cur.k][cur.p].push({ amount: round2(v), note });
-
-  save();
+  const osoba = NAMES[cur.p];
+  const { error } = await db.from('nakupy').insert({
+    datum: cur.k,
+    osoba,
+    typ: cur.t,
+    castka: round2(v),
+    poznamka: note
+  });
+  if (error) {
+    console.error(error);
+    alert('Nákup se nepodařilo uložit.');
+    return;
+  }
   amountEl.value = '';
   noteEl.value = '';
+  await loadFromSupabase();
   renderSheet();
-  refresh();
-  amountEl.focus(); // hned můžeš psát další nákup
-
+  amountEl.focus();
 }
 
 document.querySelector('.wrap').addEventListener('click', e => {
@@ -853,23 +837,18 @@ document.getElementById('add').onclick = addItem;
 
 amountEl.addEventListener('keydown', e => { if (e.key === 'Enter') addItem(); });
 
-document.getElementById('itemList').addEventListener('click', e => {
+document.getElementById('itemList').addEventListener('click', async e => {
 
   const b = e.target.closest('button[data-i]');
 
   if (!b || !cur) return;
 
-  const day = store[cur.t];
-
-  day[cur.k][cur.p].splice(Number(b.dataset.i), 1);
-
-  if (!day[cur.k][0].length && !day[cur.k][1].length) delete day[cur.k];
-
-  save();
-
+  const item = getItems(cur.t, cur.k, cur.p)[Number(b.dataset.i)];
+  if (!item) return;
+  const { error } = await db.from('nakupy').delete().eq('id', item.id);
+  if (error) { alert('Nákup se nepodařilo smazat.'); return; }
+  await loadFromSupabase();
   renderSheet();
-
-  refresh();
 
 });
 
@@ -901,55 +880,42 @@ document.getElementById('today').onclick = () => {
 
 /* ===== záloha / obnova dat (data jsou jen v tomto zařízení) ===== */
 
-document.getElementById('export').onclick = () => {
-
-  const blob = new Blob([JSON.stringify({ verze: 3, main: store.main, side: store.side })], { type: 'application/json' });
-
+document.getElementById('export').onclick = async () => {
+  const { data, error } = await db.from('nakupy').select('*').order('datum').order('id');
+  if (error) { alert('Zálohu se nepodařilo načíst.'); return; }
+  const blob = new Blob([JSON.stringify({ verze: 4, data }, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
-
   a.href = URL.createObjectURL(blob);
-
   a.download = 'nakupy-zaloha.json';
-
   a.click();
-
+  URL.revokeObjectURL(a.href);
 };
 
 document.getElementById('import').onclick = () => document.getElementById('file').click();
-
 document.getElementById('file').onchange = e => {
-
   const f = e.target.files[0];
-
   if (!f) return;
-
   const r = new FileReader();
-
-  r.onload = () => {
-
+  r.onload = async () => {
     try {
-
       const obj = JSON.parse(r.result) || {};
-
-      if (obj.verze === 3) { store.main = obj.main || {}; store.side = obj.side || {}; }
-
-      else { store.main = obj; store.side = {}; } // záloha ze starší verze (jen jídlo)
-
-      save(); render();
-
+      const rows = Array.isArray(obj.data) ? obj.data : [];
+      if (!rows.length) { alert('Záloha neobsahuje žádné nákupy.'); return; }
+      const { error } = await db.from('nakupy').insert(rows.map(x => ({
+        datum: x.datum, osoba: x.osoba, typ: x.typ, castka: x.castka, poznamka: x.poznamka || ''
+      })));
+      if (error) { alert('Zálohu se nepodařilo obnovit.'); return; }
+      await loadFromSupabase();
+      alert('Záloha byla obnovena.');
     } catch (err) { alert('Soubor se nepodařilo načíst.'); }
-
   };
-
   r.readAsText(f);
-
 };
 
 
 
-render();
-
-
+loadFromSupabase();
+startRealtime();
 
 /* offline režim (aplikace funguje i bez internetu) */
 
